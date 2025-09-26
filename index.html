@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="windows-1250"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="cs">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="Content-Style-Type" content="text/css" />
+<meta name="author" content="Benn Murhaaya">
+<title>Four by five</title>
+<style>
+body {
+    text-align : center;
+    margin : auto;
+    margin-top : 20px;
+    background: rgb(255,248,254);
+    background: linear-gradient(0deg, rgba(255,248,254,1) 0%, rgba(234,252,252,1) 81%, rgba(255,248,254,1) 100%);
+    height : 100%;
+}
+
+#page {
+    width : 1080px;
+    margin : auto;
+    padding-top : 20px
+}
+
+#rows {
+    margin : auto;
+    margin-bottom :0px;
+    display : grid;
+    grid-template-rows : 1fr;
+    grid-template-columns : 450px 450px;
+    width : fit-content;
+}
+
+.slider {
+    width : 450px;
+}
+
+#colRange0 {
+    justify-self : end;
+}
+
+#colRange1 {
+    justify-self : start ;
+}
+
+canvas {
+    /* transform : scale(0.5); */
+    border : 1px solid #000;   
+    margin : 0px; 
+}
+
+#download {
+    font-family : sans-serif;
+    font-weight : bold;
+    padding-top : 50px;
+    padding-bottom : 50px;
+    margin : auto;
+    width : 1080px;
+    font-size : 4em;
+}
+
+a {
+    color : #fff;
+    text-decoration : none;
+    background: rgb(18,158,195);
+    background: radial-gradient(circle, rgba(18, 158, 195, 1) 0%, rgba(229, 43, 231, 1) 100%);
+    padding : 20px; 
+    text-transform : uppercase;
+    border-radius: 25px;
+    display: block;
+    box-shadow: 0px 9px 26px 0px rgb(243 206 243);
+    width: fit-content;
+    margin: auto;
+}
+
+input {
+    font-size : 1.5em;
+    height : 2em;
+}
+
+input[type=file]::file-selector-button {
+  padding: .2em .4em;
+  border-radius: .2em;
+  background: rgb(18,158,195);
+  background: radial-gradient(circle, rgba(18, 158, 195, 0.5) 0%, rgba(229, 43, 231, 0.5) 100%);
+  transition: 1s;
+  color : #fff;
+}
+
+</style>
+
+</head>
+<body onload="redrawCanvas();">
+<div id="page">
+    <input type="file" id="infile0" class="inputFile" accept="image/png, image/jpeg" />
+    <div id="rows">
+        <input type="range" min="1" max="450" value="50" class="slider" id="colRange0">
+        <input type="range" min="0" max="449" value="400" class="slider" id="colRange1">
+    </div>
+</div>
+<canvas id="outImage" width="1080" height="1350"></canvas>
+<div id="download"><a id="link" href="" onClick="downloadFile();">Download image</a></div>       
+<script>
+let files = [];
+
+// define sliders as an array of element. We will refer to slider values later
+sliders = document.querySelectorAll(".slider");
+
+// make sure that each change of the slider is reflected live on the canvas
+sliders.forEach(element => {
+    element.oninput = function() {
+        redrawCanvas();
+    }
+});
+
+inputs = document.querySelectorAll(".inputFile");
+
+// make sure that each change of the slider is reflected live on the canvas
+inputs.forEach(element => {
+    element.onchange = function() {
+        // console.log(URL.createObjectURL(this.files[0]));
+        // console.log(element.id.substring(6));
+        // update Nth position in the array
+        files[element.id.substring(6)] = URL.createObjectURL(this.files[0]);
+        redrawCanvas();
+        // console.log(files);
+    }
+});
+
+function downloadFile () {
+    var c = document.getElementById("outImage");
+    var link = document.getElementById('link');
+    var timestamp = Math.floor(Date.now() / 1000);
+    link.setAttribute('download', 'ig-sized-' + timestamp + '.png');
+    link.setAttribute('href', c.toDataURL("image/png").replace("image/png", "image/octet-stream"));
+
+}
+
+function redrawCanvas() {
+
+    // define new image
+    images = [new Image()]
+    
+    // create context for canvas
+    var c = document.getElementById("outImage");
+    var ctx = c.getContext("2d");
+
+    let canvas_width  = c.width;
+    console.log("Canvas width: "+ canvas_width);
+    let canvas_height = c.height;
+    console.log("Canvas height: "+ canvas_height);
+    
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, canvas_width, canvas_height);
+    
+    // I am reusing old code that expected more files than just one
+    f = 0;
+    images[f].src = files[f];
+    images[f].onload = function (e) {
+
+        // the input image does not have to be canvas_heightpx in height so we scale accordingly
+        // we expect the image to be taller than wider
+        // if the image is larger scaling factor will be smaller
+        scale = canvas_height / images[f].height;
+        // this width corresponds to the image resized to canvas of canvas_widthpx
+        stretched_width = Math.round(scale * images[f].width);
+        stretched_height = Math.round(scale * images[f].height);
+        console.log("stretched height (should equal canvas height):" + stretched_height);
+        console.log("stretched width:" + stretched_width);
+        
+        //     drawImage( image,     sx,                        sy, sWidth,                       sHeight,        dx,          dy, dWidth,    dHeight)    
+        // ctx.drawImage(images[f], Math.round(xoffset/scale), 0, Math.round(halfWidth/scale), images[f].height, f*halfWidth, 0,  halfWidth, canvas_height);
+
+        // draw the middle of the image, just put it as it is in the middle
+        // we draw the whole image (parms going from left to right)
+        //
+        // take the subsection: 
+        //   subsection starting on left
+        //   subsection starting on top
+        //   full width
+        //   full height
+        //
+        // place that subsection (the whole image really):
+        //   a bit to the right so it's aligned in the midle full width of canvas - streched_width of image, / 2 (rounded)
+        //   but place it on top
+        //   the width will be the rescaled width
+        //   the height will be full canvas
+        //
+        ctx.drawImage(images[f], 0, 0, images[f].width, images[f].height, Math.round((canvas_width - stretched_width)/2), 0, stretched_width, canvas_height);
+
+        // now draw the left part over it
+        // take the subsection that is defined by left slider:
+        //   subsection starting on left
+        //   subsection starting on the top
+        //   width of just the slider        
+        //   full height
+        //
+        // place that subsection
+        //   starting from the left
+        //   but place it on the top
+        //   but stretch it vertically, how far? to the same position where main image starts PLUS the slider value (sized accordingly) 
+        //   full height
+        //
+        console.log(Math.round((canvas_width - stretched_width)/2));
+        console.log(sliders[0].value);
+        ctx.drawImage(images[f], 0, 0, sliders[0].value, images[f].height, 0, 0, Math.round(((canvas_width - stretched_width)/2) + sliders[0].value*scale), canvas_height);
+        
+        // that was the easy part, now the other side
+        // take the subsection that is defined by the right slider:
+        //   subsection starting at the full image width - slider value
+        //   subsection starting on the top
+        //   width is just the slider
+        //   full height
+        //
+        // place that subsection
+        //   canvas_width - half of the difference between image width  and canvas width - scaled slider value
+        //   but place it on the top
+        //   width is just the scaled slider - rounded
+        //   full height
+        // 
+        
+        // the slider is inverted
+        adjusted_slider = 450 - sliders[1].value;
+        console.log(adjusted_slider*scale);
+        console.log(stretched_width);
+        var x = Math.round(canvas_width/2 + stretched_width/2 - adjusted_slider*scale);
+        console.log(x);
+        ctx.drawImage(images[f], images[f].width - adjusted_slider, 0, adjusted_slider, images[f].height, x, 0, Math.round(((canvas_width - stretched_width)/2) + adjusted_slider*scale), canvas_height);
+   }
+
+}
+
+function dragBehavior() {
+    document.querySelectorAll(".dropZone").forEach(dropZoneElement => {
+       
+        // when dragging image over - highlight the cell
+        dropZoneElement.addEventListener("dragover", e => {
+            e.preventDefault();
+            dropZoneElement.classList.add("dropZoneOver");
+        });
+        
+        // reset the hightlighting
+        ["dragleave", "dragend"].forEach(type => {
+            dropZoneElement.addEventListener(type, e=> {
+                dropZoneElement.classList.remove("dropZoneOver");
+            });
+        });
+        
+        // on image drop - set the background to the image
+        dropZoneElement.addEventListener("drop", e => {
+            e.preventDefault();
+            // console.log(e.dataTransfer.files[0]);
+            dropZoneElement.classList.remove("dropZoneOver");
+            dropZoneElement.classList.add("dropZoneBGimage");
+            // rest of the values are being set via class dropZoneBGimage          
+            dropZoneElement.style.backgroundImage = "url('" + e.dataTransfer.files[0]['name'] + "')";
+            fileList();
+        });
+    
+        // remove the background image and revert to default look
+        dropZoneElement.addEventListener("click", e => {
+            dropZoneElement.style = '';
+            dropZoneElement.classList.remove("dropZoneBGimage");
+            dropZoneElement.classList.remove("dropZoneOver");
+            fileList();
+        });     
+    
+    });
+}
+</script>
+
+</body>
+</html>
