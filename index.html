@@ -101,8 +101,8 @@ input[type=file]::file-selector-button {
 <canvas id="outImage" width="1080" height="1350"></canvas>
 <div id="download"><a id="link" href="" onClick="downloadFile();">Download image</a></div>       
 <script>
-let file_blob = undefined;
-let file_name = undefined;
+var file_blob = undefined;
+var file_name = undefined;
 
 // define sliders as an array of element. We will refer to slider values later
 sliders = document.querySelectorAll(".slider");
@@ -131,7 +131,7 @@ inputs.forEach(element => {
 
 });
 
-function downloadFile () {
+function downloadFile() {
 
     var c = document.getElementById("outImage");
     var link = document.getElementById('link');
@@ -150,9 +150,9 @@ function redrawCanvas() {
     var c = document.getElementById("outImage");
     var ctx = c.getContext("2d");
 
-    let canvas_width  = c.width;
+    var canvas_width  = c.width;
     // console.log("Canvas width: " + canvas_width);
-    let canvas_height = c.height;
+    var canvas_height = c.height;
     // console.log("Canvas height: " + canvas_height);
     
     ctx.fillStyle = "white";
