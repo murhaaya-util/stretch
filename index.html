@@ -101,37 +101,42 @@ input[type=file]::file-selector-button {
 <canvas id="outImage" width="1080" height="1350"></canvas>
 <div id="download"><a id="link" href="" onClick="downloadFile();">Download image</a></div>       
 <script>
-let files = [];
+let file_blob = undefined;
+let file_name = undefined;
 
 // define sliders as an array of element. We will refer to slider values later
 sliders = document.querySelectorAll(".slider");
 
 // make sure that each change of the slider is reflected live on the canvas
 sliders.forEach(element => {
+
     element.oninput = function() {
         redrawCanvas();
     }
+
 });
 
 inputs = document.querySelectorAll(".inputFile");
 
-// make sure that each change of the slider is reflected live on the canvas
 inputs.forEach(element => {
+
     element.onchange = function() {
-        // console.log(URL.createObjectURL(this.files[0]));
-        // console.log(element.id.substring(6));
-        // update Nth position in the array
-        files[element.id.substring(6)] = URL.createObjectURL(this.files[0]);
+        // console.log(this.files[0]);
+        
+        // get the file name sans the suffix
+        file_name = this.files[0]['name'].split(".")[0];
+        file_blob = URL.createObjectURL(this.files[0]);
         redrawCanvas();
-        // console.log(files);
     }
+
 });
 
 function downloadFile () {
+
     var c = document.getElementById("outImage");
     var link = document.getElementById('link');
     var timestamp = Math.floor(Date.now() / 1000);
-    link.setAttribute('download', 'ig-sized-' + timestamp + '.png');
+    link.setAttribute('download', file_name + '-stretched-' + timestamp + '.png');
     link.setAttribute('href', c.toDataURL("image/png").replace("image/png", "image/octet-stream"));
 
 }
@@ -139,37 +144,37 @@ function downloadFile () {
 function redrawCanvas() {
 
     // define new image
-    images = [new Image()]
+    image = new Image();
     
     // create context for canvas
     var c = document.getElementById("outImage");
     var ctx = c.getContext("2d");
 
     let canvas_width  = c.width;
-    console.log("Canvas width: "+ canvas_width);
+    // console.log("Canvas width: " + canvas_width);
     let canvas_height = c.height;
-    console.log("Canvas height: "+ canvas_height);
+    // console.log("Canvas height: " + canvas_height);
     
     ctx.fillStyle = "white";
     ctx.fillRect(0, 0, canvas_width, canvas_height);
     
     // I am reusing old code that expected more files than just one
     f = 0;
-    images[f].src = files[f];
-    images[f].onload = function (e) {
+    image.src = file_blob;
+    image.onload = function (e) {
 
         // the input image does not have to be canvas_heightpx in height so we scale accordingly
         // we expect the image to be taller than wider
         // if the image is larger scaling factor will be smaller
-        scale = canvas_height / images[f].height;
+        scale = canvas_height / image.height;
         // this width corresponds to the image resized to canvas of canvas_widthpx
-        stretched_width = Math.round(scale * images[f].width);
-        stretched_height = Math.round(scale * images[f].height);
-        console.log("stretched height (should equal canvas height):" + stretched_height);
-        console.log("stretched width:" + stretched_width);
+        stretched_width = Math.round(scale * image.width);
+        stretched_height = Math.round(scale * image.height);
+        // console.log("stretched height (should equal canvas height):" + stretched_height);
+        // console.log("stretched width:" + stretched_width);
         
-        //     drawImage( image,     sx,                        sy, sWidth,                       sHeight,        dx,          dy, dWidth,    dHeight)    
-        // ctx.drawImage(images[f], Math.round(xoffset/scale), 0, Math.round(halfWidth/scale), images[f].height, f*halfWidth, 0,  halfWidth, canvas_height);
+        //     drawImage(image, sx,                        sy, sWidth,                     sHeight,       dx,          dy, dWidth,    dHeight)    
+        // ctx.drawImage(image, Math.round(xoffset/scale), 0, Math.round(halfWidth/scale), images.height, f*halfWidth, 0,  halfWidth, canvas_height);
 
         // draw the middle of the image, just put it as it is in the middle
         // we draw the whole image (parms going from left to right)
@@ -186,7 +191,7 @@ function redrawCanvas() {
         //   the width will be the rescaled width
         //   the height will be full canvas
         //
-        ctx.drawImage(images[f], 0, 0, images[f].width, images[f].height, Math.round((canvas_width - stretched_width)/2), 0, stretched_width, canvas_height);
+        ctx.drawImage(image, 0, 0, image.width, image.height, Math.round((canvas_width - stretched_width)/2), 0, stretched_width, canvas_height);
 
         // now draw the left part over it
         // take the subsection that is defined by left slider:
@@ -201,9 +206,9 @@ function redrawCanvas() {
         //   but stretch it vertically, how far? to the same position where main image starts PLUS the slider value (sized accordingly) 
         //   full height
         //
-        console.log(Math.round((canvas_width - stretched_width)/2));
-        console.log(sliders[0].value);
-        ctx.drawImage(images[f], 0, 0, sliders[0].value, images[f].height, 0, 0, Math.round(((canvas_width - stretched_width)/2) + sliders[0].value*scale), canvas_height);
+        // console.log(Math.round((canvas_width - stretched_width)/2));
+        // console.log(sliders[0].value);
+        ctx.drawImage(image, 0, 0, sliders[0].value, image.height, 0, 0, Math.round(((canvas_width - stretched_width)/2) + sliders[0].value*scale), canvas_height);
         
         // that was the easy part, now the other side
         // take the subsection that is defined by the right slider:
@@ -221,51 +226,13 @@ function redrawCanvas() {
         
         // the slider is inverted
         adjusted_slider = 450 - sliders[1].value;
-        console.log(adjusted_slider*scale);
-        console.log(stretched_width);
+        // console.log(adjusted_slider*scale);
+        // console.log(stretched_width);
         var x = Math.round(canvas_width/2 + stretched_width/2 - adjusted_slider*scale);
-        console.log(x);
-        ctx.drawImage(images[f], images[f].width - adjusted_slider, 0, adjusted_slider, images[f].height, x, 0, Math.round(((canvas_width - stretched_width)/2) + adjusted_slider*scale), canvas_height);
+        // console.log(x);
+        ctx.drawImage(image, image.width - adjusted_slider, 0, adjusted_slider, image.height, x, 0, Math.round(((canvas_width - stretched_width)/2) + adjusted_slider*scale), canvas_height);
    }
 
-}
-
-function dragBehavior() {
-    document.querySelectorAll(".dropZone").forEach(dropZoneElement => {
-       
-        // when dragging image over - highlight the cell
-        dropZoneElement.addEventListener("dragover", e => {
-            e.preventDefault();
-            dropZoneElement.classList.add("dropZoneOver");
-        });
-        
-        // reset the hightlighting
-        ["dragleave", "dragend"].forEach(type => {
-            dropZoneElement.addEventListener(type, e=> {
-                dropZoneElement.classList.remove("dropZoneOver");
-            });
-        });
-        
-        // on image drop - set the background to the image
-        dropZoneElement.addEventListener("drop", e => {
-            e.preventDefault();
-            // console.log(e.dataTransfer.files[0]);
-            dropZoneElement.classList.remove("dropZoneOver");
-            dropZoneElement.classList.add("dropZoneBGimage");
-            // rest of the values are being set via class dropZoneBGimage          
-            dropZoneElement.style.backgroundImage = "url('" + e.dataTransfer.files[0]['name'] + "')";
-            fileList();
-        });
-    
-        // remove the background image and revert to default look
-        dropZoneElement.addEventListener("click", e => {
-            dropZoneElement.style = '';
-            dropZoneElement.classList.remove("dropZoneBGimage");
-            dropZoneElement.classList.remove("dropZoneOver");
-            fileList();
-        });     
-    
-    });
 }
 </script>
 
