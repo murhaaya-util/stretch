@@ -122,7 +122,6 @@ inputs.forEach(element => {
 
     element.onchange = function() {
         // console.log(this.files[0]);
-        
         // get the file name sans the suffix
         file_name = this.files[0]['name'].split(".")[0];
         file_blob = URL.createObjectURL(this.files[0]);
@@ -155,11 +154,12 @@ function redrawCanvas() {
     var canvas_height = c.height;
     // console.log("Canvas height: " + canvas_height);
     
-    ctx.fillStyle = "white";
-    ctx.fillRect(0, 0, canvas_width, canvas_height);
+    if (!file_blob) {
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, canvas_width, canvas_height);
+    }
     
-    // I am reusing old code that expected more files than just one
-    f = 0;
+    // start creating the image
     image.src = file_blob;
     image.onload = function (e) {
 
