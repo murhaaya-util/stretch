@@ -59,6 +59,24 @@ canvas {
     font-size : 4em;
 }
 
+#switch {
+    font-family : sans-serif;
+    font-weight : bold;
+    padding-top : 20px;
+    padding-bottom : 20px;
+    font-size : 2.5em;
+    display: block;
+    margin: 10px auto 40px auto;
+    cursor: pointer;
+
+    color : #fff;
+    padding: .2em .4em;
+    border-radius: .2em;
+    background: rgb(18,158,195);
+    background: radial-gradient(circle, rgba(18, 158, 195, 0.5) 0%, rgba(229, 43, 231, 0.5) 100%);
+    text-transform : uppercase;
+}
+
 a {
     color : #fff;
     text-decoration : none;
@@ -79,12 +97,12 @@ input {
 }
 
 input[type=file]::file-selector-button {
-  padding: .2em .4em;
-  border-radius: .2em;
-  background: rgb(18,158,195);
-  background: radial-gradient(circle, rgba(18, 158, 195, 0.5) 0%, rgba(229, 43, 231, 0.5) 100%);
-  transition: 1s;
-  color : #fff;
+    padding: .2em .4em;
+    border-radius: .2em;
+    background: rgb(18,158,195);
+    background: radial-gradient(circle, rgba(18, 158, 195, 0.5) 0%, rgba(229, 43, 231, 0.5) 100%);
+    transition: 1s;
+    color : #fff;
 }
 
 </style>
@@ -92,6 +110,7 @@ input[type=file]::file-selector-button {
 </head>
 <body onload="redrawCanvas();">
 <div id="page">
+    <div id="switch" onClick="switchRatio();">switch to 3/4</a></div> 
     <input type="file" id="infile0" class="inputFile" accept="image/png, image/jpeg" />
     <div id="rows">
         <input type="range" min="1" max="450" value="50" class="slider" id="colRange0">
@@ -138,6 +157,20 @@ function downloadFile() {
     link.setAttribute('download', file_name + '-stretched-' + timestamp + '.png');
     link.setAttribute('href', c.toDataURL("image/png").replace("image/png", "image/octet-stream"));
 
+}
+
+function switchRatio() {
+
+    if (document.getElementById("switch").innerHTML ==='switch to 3/4') {
+        document.getElementById("outImage").height = 1440;
+        document.getElementById("switch").innerHTML = 'switch to 4/5';
+        document.title = 'Three by four';        
+    } else {
+        document.getElementById("outImage").height = 1350;
+        document.getElementById("switch").innerHTML ='switch to 3/4';
+        document.title = 'Four by five';
+    }
+    redrawCanvas();
 }
 
 function redrawCanvas() {
